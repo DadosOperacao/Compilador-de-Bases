@@ -10,6 +10,7 @@ def read_csv_semicolon(path):
 def read_excel_default(path):
     return pd.read_excel(path)
 
+
 def save_excel_safe(df, output_file, sheet_name="Base Consolidada"):
     output_file.parent.mkdir(parents=True, exist_ok=True)
     if output_file.exists():
