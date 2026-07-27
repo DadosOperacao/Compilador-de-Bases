@@ -1,0 +1,48 @@
+# ---------- Dados (NUNCA commitar) ----------
+entrada/*
+saida/*
+logs/*
+!entrada/.gitkeep
+!saida/.gitkeep
+!logs/.gitkeep
+
+*.csv
+*.txt
+*.parquet
+*.db
+*.sqlite3
+
+# ---------- Temporarios do Excel ----------
+~$*.xlsx
+~$*.xls
+*.tmp
+
+# ---------- Segredos ----------
+.env
+.env.*
+!.env.example
+credentials.json
+*.pem
+*.key
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+
+# ---------- Editores / OS ----------
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
