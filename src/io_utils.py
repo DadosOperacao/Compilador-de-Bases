@@ -7,6 +7,9 @@ from .utils import sanitizar_valor_excel
 def read_csv_semicolon(path):
     return pd.read_csv(path, sep=";", low_memory=False, dtype=str)
 
+def read_csv_comma(path):
+    return pd.read_csv(path, sep=",", low_memory=False, dtype=str)
+
 def read_excel_default(path):
     return pd.read_excel(path)
 

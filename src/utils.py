@@ -67,3 +67,14 @@ def formatar_tempo(series):
             return txt.split(" ")[-1]
         return txt
     return series.apply(fmt)
+
+def normalizar_duracao(serie: pd.Series) -> pd.Series:
+
+    if pd.api.types.is_timedelta64_dtype(serie):
+        return serie
+
+    if pd.api.types.is_numeric_dtype(serie):
+        return pd.to_timedelta(serie, unit="s", errors="coerce")
+
+    texto = serie.astype("string").str.strip()
+    return pd.to_timedelta(texto, errors="coerce")

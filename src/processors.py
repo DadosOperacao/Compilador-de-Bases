@@ -1,5 +1,7 @@
+import datetime
+
 import pandas as pd
-from .utils import limpar_colunas, limpar_textos_df, normalizar_texto, limpar_formula_excel
+from .utils import limpar_colunas, limpar_textos_df, normalizar_duracao, normalizar_texto, limpar_formula_excel
 from .mappings import (
     apply_Status_chatvideo,
     map_empresa,
@@ -13,24 +15,48 @@ import numpy as np
 
 def processar_telefonia(df, mapa_empresa, mapa_grupo, mapa_nivel):
     df=limpar_textos_df(limpar_colunas(df))
-    for c in ["Identificador - UniqueID","Identificador - LinkedID"]:
+    for c in ["protocolo"]:
         df[c]=df[c].apply(limpar_formula_excel)
-    df=df[~df["Agrupador - Centro de Custo"].apply(normalizar_texto).isin(["raiz","medico","cac"])]
-    df=df[df["Agrupador - Tipo de Ligação"].apply(normalizar_texto)=="fila"]
-    df=df[~df["Agrupador - Fila"].apply(normalizar_texto).isin(["hospitalclinicashc","medico","cac","filateste3","filateste1"])]
+    df=df[(df["direcao"].eq("Entrante") & df["nome_do_grupo"].ne("-"))
+            | (df["direcao"].isna() & df["destino"].eq("8614") & df["nome_do_grupo"].eq("-"))]
+
     out=pd.DataFrame()
-    out["Data"]=df["Data/Hora - Inicio"]
-    out["ID"]=df["Identificador - UniqueID"]
-    out["Status"]=df["Agrupador - Status"]
-    out["Empresa"]=map_empresa(df["Agrupador - Fila"], mapa_empresa)
-    out["Grupo de Clientes"]=map_grupo(df["Agrupador - Fila"], mapa_grupo)
-    out["Tempo de Atendimento"]=df["Tempo - Atendimento - Total"]
-    out["Tempo de Espera"]=df["Tempo - Espera - Total"]
-    out["Nível"]=apply_nivel_telefonia(df["Agrupador - Fila"], mapa_nivel)
-    out["Centro de Custo"]=df["Agrupador - Centro de Custo"]
+
+    out["Data"] = df["data"].astype(str) + " " + df["inicio_da_chamada_cdr"].astype(str)
+
+    out["ID"]=df["protocolo"]
+
+
+    out["Empresa"]= np.where(
+        df["direcao"].isna() & 
+        df["destino"].eq("8614") & 
+        df["nome_do_grupo"].eq("-"),
+        "Starya PMF",
+        map_empresa(df["nome_do_grupo"], mapa_empresa)
+    )
+
+    out["Status"]=np.where(
+        out["Empresa"].eq("Starya PMF"),
+        "Concluído",
+        np.where(
+        normalizar_duracao(df["inicio_do_atendimento"]).eq(pd.Timedelta(0))
+        & normalizar_duracao(df["duracao_do_atendimento"]).eq(pd.Timedelta(0)),
+        "Não Concluído",
+        "Concluído"
+        ))
+
+    out["Grupo de Clientes"]=np.where(
+        out["Empresa"].eq("Starya PMF"),
+        "PMF",
+        map_grupo(df["nome_do_grupo"], mapa_grupo)
+    )
+
+    out["Tempo de Atendimento"]=df["duracao_do_atendimento"]
+    out["Tempo de Espera"]=df["duracao_da_fila"]
+    out["Nível"]=apply_nivel_telefonia(df["nome_do_grupo"], mapa_nivel)
+    out["Centro de Custo"]=df["servico_dnis"]
     out["Canal de Atendimento"]="Telefone"
-    out["LinkedID (Telefonia)"]=df["Identificador - LinkedID"]
-    out["Status Final (Telefonia)"]=df["Agrupador - Status Final"]
+    out["Status Final (Telefonia)"]=df["finalizacao"]
     out["Origem"]="Telefonia"
     return out
 
@@ -152,7 +178,10 @@ def processar_teleconsultas(df,aux_evolucao,mapa_empresa,mapa_grupo,mapa_nivel_e
     )
 
     out = pd.DataFrame()
-    out["Data"] = df["Data Slot"]
+    out["Data"] = df["DataHora"] = pd.to_datetime(
+    df["Data Slot"].astype(str) + " " + df["Hora Slot"].astype(str),
+    dayfirst=True
+)
     out["ID"] = df["IdAgendamento"]
     out["Empresa"] = map_empresa(df["Empresa"], mapa_empresa)
     out["Grupo de Clientes"] = map_grupo(df["Empresa"], mapa_grupo)
@@ -164,21 +193,20 @@ def processar_teleconsultas(df,aux_evolucao,mapa_empresa,mapa_grupo,mapa_nivel_e
     ) 
 
     out["Tempo de Espera"] = (
-        df["Data Profissional Acessou Sala"] -
-        df["Data Paciente Entrou na Fila"]
+        pd.to_datetime(df["Data Profissional Acessou Sala"], errors="coerce") -
+        pd.to_datetime(df["Data Paciente Entrou na Fila"], errors="coerce")
     )
 
     out["Tempo de Atendimento"] = (
-        df["Data Profissional Saiu Sessão Vídeo"] -
-        df["Data Paciente Acessou Sala"]
+        pd.to_datetime(df["Data Profissional Saiu Sessão Vídeo"], errors="coerce") -
+        pd.to_datetime(df["Data Paciente Acessou Sala"], errors="coerce")
     )
 
     out["Status"] = np.where(
         df["Tipo Atendimento"].apply(normalizar_texto) == "atendimento assincrono",
         df["Situacao do Atendimento"],
         np.where(
-            out["Tempo de Atendimento"].isna() |
-            out["Tempo de Espera"].isna(),
+            out["Tempo de Atendimento"].isna(),
             "Não Realizado",
             df["Situacao do Atendimento"]
         )

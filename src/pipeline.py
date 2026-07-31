@@ -1,6 +1,6 @@
 import pandas as pd
 from .config import INPUT_DIR, CONFIG_DIR, OUTPUT_FILE, FILES, FINAL_COLUMNS
-from .io_utils import read_csv_semicolon, read_excel_default, save_excel_safe
+from .io_utils import read_csv_semicolon, read_excel_default, save_excel_safe, read_csv_comma
 from .utils import formatar_tempo, formatar_data_coluna, sanitizar_valor_excel
 from .mappings import (
     build_status_map,
@@ -40,7 +40,7 @@ def run_pipeline():
         f"[Mapas] Nível Tel/Wpp/Chat/TeleEsp/TeleTodos: "
         f"{len(nivel_tel)}/{len(nivel_wpp)}/{len(nivel_chat)}/{len(nivel_tele_esp)}/{len(nivel_tele_todos)}"
     )
-    tel=read_csv_semicolon(INPUT_DIR / FILES["telefonia"])
+    tel=read_csv_comma(INPUT_DIR / FILES["telefonia"])
     wpp=read_csv_semicolon(INPUT_DIR / FILES["whatsapp"])
     chat=read_excel_default(INPUT_DIR / FILES["chatvideo"])
     tele=read_excel_default(INPUT_DIR / FILES["teleconsultas"])

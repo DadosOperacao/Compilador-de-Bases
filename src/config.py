@@ -18,10 +18,22 @@ FILES = {
 
 OUTPUT_FILE = OUTPUT_DIR / "Base_Consolidada.xlsx"
 FINAL_COLUMNS = [
-    "Data", "ID", "Status", "Empresa", "Grupo de Clientes",
-    "Tempo de Atendimento", "Tempo de Espera", "Nível", "Centro de Custo",
-    "Canal de Atendimento", "Nota de Serviço", "LinkedID (Telefonia)",
-    "Status Final (Telefonia)", "Tipo de Atendimento (Teleconsulta/N2)",
-    "Especialidade (Teleconsulta)", "Razão da Chamada (Chat/Video)",
-    "Desfecho (Teleconsulta/N2)", "Origem"
+    "Data", 
+    "ID", 
+    "Status", 
+    "Empresa", 
+    "Grupo de Clientes",    
+    "Tempo de Atendimento", 
+    "Tempo de Espera",
+   # "Agente",
+    "Nível", 
+    "Centro de Custo",
+    "Canal de Atendimento", 
+    "Nota de Serviço", 
+    "Status Final (Telefonia)", 
+    "Tipo de Atendimento (Teleconsulta/N2)",
+    "Especialidade (Teleconsulta)", 
+    "Razão da Chamada (Chat/Video)",
+    "Desfecho (Teleconsulta/N2)", 
+    "Origem"
 ]
